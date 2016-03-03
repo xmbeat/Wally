@@ -5,6 +5,11 @@
  * gcc -o main *.o `pkg-config --libs --cflags gtk+-2.0` -I/usr/include/libappindicator-0.1/ -lappindicator
  */
 
+/*TODO: Crear carpeta de configuracion
+ * Crear perfiles y eliminarlos (hcaer funcionar cuadro de dialogo)
+ *
+ */
+
 #include <gui/ClassControls.h>
 #include <Utils/String.h>
 #include <IPC/InstanceManager.h>

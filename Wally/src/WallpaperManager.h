@@ -11,6 +11,7 @@
 #include <time.h>
 #include <IPC/Process.h>
 #include <Utils/Thread.h>
+#include <stdlib.h> //getenv
 
 #include <stdio.h>
 static int pseudo_random_number(int seed){
@@ -67,16 +68,27 @@ private:
 protected:
 	void setActive2(int index){
 		if (index < mImages.size() && index >= 0){
-			String param = String("file://") + mImages[index];
-			//pid = Process::createProcess("gsettings", "set", "org.gnome.desktop.background", "draw-background", "false", NULL, false);
-			int pid = Process::createProcess("gsettings", "set", "org.gnome.desktop.background","picture-uri", param.c_str(), NULL, false);
-			//pid = Process::createProcess("gsettings", "set", "org.gnome.desktop.background", "draw-background", "true", NULL, false);
-			if (pid <= 0){
-				pid = Process::createProcess("gconftool-2", "-t", "str", "--set", "/desktop/gnome/background/picture_filename", mImages[index].c_str(), NULL, false);
+			int pid = -1;
+			char *desktop = getenv("DESKTOP_SESSION");
+			if (String("mate").equals(desktop, true)){
+				pid = Process::createProcess("gsettings", "set", "org.mate.background","picture-filename", mImages[index].c_str(), NULL, false);
+			}
+			else if (String("gnome").equals(desktop, true)){
+				String param = String("file://") + mImages[index];
+				//pid = Process::createProcess("gsettings", "set", "org.gnome.desktop.background", "draw-background", "false", NULL, false);
+				pid = Process::createProcess("gsettings", "set", "org.gnome.desktop.background","picture-uri", param.c_str(), NULL, false);//pid = Process::createProcess("gsettings", "set", "org.gnome.desktop.background", "draw-background", "true", NULL, false);
 				if (pid <= 0){
-					//KDE dbus-send --session --dest=org.new_wallpaper.Plasmoid --type=method_call /org/new_wallpaper/Plasmoid/0 org.new_wallpaper.Plasmoid.SetWallpaper string:/path/to/your/wallpaper
-					fprintf(stderr, "No se pudo cambiar el fondo a <<%s>>\n", param.c_str());
+					pid = Process::createProcess("gconftool-2", "-t", "str", "--set", "/desktop/gnome/background/picture_filename", mImages[index].c_str(), NULL, false);
+
 				}
+			}
+			else if (String ("KDE").equals(desktop, true)){
+				String param = String("string:") + mImages[index];
+				pid = Process::createProcess("dbus-send", "--session", "--dest=org.new_wallpaper.Plasmoid", "--type=method_call", "org/new_wallpaper/Plasmoid/0", "org.new_wallpaper.Plasmoid.SetWallpaper", param.c_str(), NULL, false);
+			}
+			if (pid <= 0){
+				//  string:/path/to/your/wallpaper
+				fprintf(stderr, "No se pudo cambiar el fondo\n");
 			}
 		}
 	}
