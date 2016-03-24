@@ -20,6 +20,7 @@ mKey(key),	mMemory(0), mRemovable(true), mLocked(false), mSemaphore(0) {
 		throw e;
 	}
 	mSemaphore->wait();
+	//Tratamos de acceder a esta memoria si fue reservada previamente
 	mSegmentId = shmget(key, preferedSize, S_IRUSR | S_IWUSR);
 	if (mSegmentId == -1){
 		mSegmentId = shmget(key, preferedSize, S_IRUSR | S_IWUSR | IPC_CREAT);
@@ -64,21 +65,21 @@ int SHMemory::getAttachCount(){
 }
 
 int SHMemory::getSize(){
-	struct shmid_ds info;
-	if (shmctl(mSegmentId, IPC_STAT, &info) != -1){
-		return info.shm_segsz;
+	struct shmid_ds stat;
+	if (shmctl(mSegmentId, IPC_STAT, &stat) != -1){
+		return stat.shm_segsz;
 	}
 	return 0;
 }
 
 int SHMemory::write(int offset, const char* data, int len){
 	if (mMemory != 0){
-		int size = getSize();
+		int size = getSize() - offset;
 		if (len < size){
 			size = len;
 		}
 		for (int i = 0; i < size; i++){
-			mMemory[i] = data[i];
+			mMemory[i + offset] = data[i];
 		}
 		return size;
 	}
@@ -87,12 +88,12 @@ int SHMemory::write(int offset, const char* data, int len){
 
 int SHMemory::read(int offset, char* buffer, int len){
 	if (mMemory != 0){
-		int size = getSize();
+		int size = getSize() - offset;
 		if (len < size){
 			size = len;
 		}
 		for (int i = 0; i < size; i++){
-			buffer[i] = mMemory[i];
+			buffer[i] = mMemory[i + offset];
 		}
 		return size;
 	}

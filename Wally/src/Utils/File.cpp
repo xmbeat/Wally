@@ -76,6 +76,8 @@ File::~File(){
 
 void File::loadInfoFile(){
 	mAccess = true;
+	mExist = true;
+
 	zeroMemory(&mStatFile, sizeof(mStatFile));
 	if (stat(mPathName, &mStatFile) == -1)
 	{
@@ -86,7 +88,8 @@ void File::loadInfoFile(){
 File::File(String pathName):
 	mDirStructure(),
 	mPathName(pathName),
-	mAccess(true)
+	mAccess(true),
+	mExist(true)
 {
 	loadInfoFile();
 	mDirStructure = toAbsolutePath(&pathName);
@@ -133,6 +136,7 @@ ArrayList<String> File::toAbsolutePath(String * path){
 		String ruta = workDir;
 		if (ruta.charAt(ruta.length()-1)!='/') ruta+= "/";
 		ruta += *path;
+		printf("ruta: %s\n", ruta.c_str());
 		return toAbsolutePath(&ruta);
 	}
 }

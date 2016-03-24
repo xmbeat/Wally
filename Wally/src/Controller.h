@@ -17,7 +17,7 @@
 #include <Utils/File.h>
 #include <string.h>
 #include <Utils/Thread.h>
-#include <IPC/SHMemory.h>
+#include <IPC/Process.h>
 
 enum {
 	COL_PATH, COL_PIXBUF, N_COLS
@@ -45,10 +45,14 @@ public:
 		mProfileManager = new ProfileManager(File::getUserFolder(NULL) + "/.wally", "profile" );
 		GtkBuilderEx &builder = *mBuilder;
 		//Obtenemos la ruta absoluta al archivo desktop.png
-		File icon = File(String(argv[0]) + "/../resources/desktop.png");
-		File xml = File(String(argv[0]) + "/../resources/interface.xml");
+		String exePath = Process::getPathToExeFile(Process::getPID());
+		File icon = File(exePath + "/../resources/desktop.png");
+		File xml = File(exePath + "/../resources/interface.xml");
 		//Cargamos la interfaz gráfica
-		builder.addFromFile(xml.getAbsolutePath());
+		if (!builder.addFromFile(xml.getAbsolutePath())){
+			fprintf(stderr, "File not found: %s\n", xml.getAbsolutePath().c_str());
+			exit(-1);
+		}
 		//Obtenemos la ventana para manejar el evento destroy
 		mVentana = new GtkWindowEx(builder["main_window"]);
 		mVentana->actToWindowCloseEvent(this);

@@ -4,7 +4,7 @@
  *  Created on: 24/02/2014
  *      Author: xmbeat
  */
-#include <unistd.h>		/* vfork, execv, pipe2 */
+#include <unistd.h>		/* vfork, execv, pipe2, readlink, getpid */
 #include <sys/types.h> 	/* pid_t */
 #include <fcntl.h>		/* O_CLOEXEC */
 #include <stdlib.h>     /* getenv */
@@ -13,7 +13,7 @@
 #include <signal.h>		/* sigaction */
 #include <stdarg.h>		/* valist */
 #include "Process.h"
-#include <stdio.h>
+#include <dirent.h> 	/* PATH_MAX*/
 int Process::createProcess(const char* command, const char* arg, ...){
 	ArrayList<char*> buffer;
 	va_list argumentList;
@@ -74,6 +74,23 @@ int Process::createProcessFromArray(const char* path, char* const argv[], bool w
 
 }
 
+
+String Process::getPathToExeFile(int pid){
+	char path [PATH_MAX];
+	for (int i = 0; i < PATH_MAX;i++){
+		path[i] = 0;
+	}
+	String link = String("/proc/") + pid + "/exe";
+	if (readlink(link, path, PATH_MAX) != -1){
+		return String(path);
+	}
+	else{
+		throw "Not in linux";
+	}
+}
+int Process::getPID(){
+	return getpid();
+}
 Process::Process() {
 	// TODO Auto-generated constructor stub
 
