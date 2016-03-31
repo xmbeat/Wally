@@ -167,12 +167,14 @@ public:
 	//Clase que se encarga de cargar las imagenes al iconview
 	class ImageLoader: public Thread{
 	private:
+		bool mSave;
 		ArrayList<String> mImages;
 		Controller* mController;
 	public:
-		ImageLoader(ArrayList<String> images, Controller* controller){
+		ImageLoader(ArrayList<String> images, Controller* controller, bool save){
 			mImages = images;
 			mController = controller;
+			mSave = save;
 		}
 		void run(){
 			for (int i = 0; i < mImages.size(); i++){
@@ -196,7 +198,14 @@ public:
 					gdk_threads_leave();
 				}
 			}
+
 			gdk_threads_enter();
+			mController->mWallpaper->setImages(*(mController->mCurrentImages));
+			mController->mWallpaper->setRandom(mController->mRandom->isChecked());
+			mController->mWallpaper->setDelay(mController->mSpinner->getIntValue());
+			if (mController->mProfile > 1){
+				mController->saveProfile(mController->mProfile, *(mController->mCurrentImages), mController->mRandom->isChecked(), mController->mSpinner->getValue());
+			}
 			for (int i = 0; i < mController->mButtons.size(); i++){
 				mController->mButtons[i]->setEnabled(true);
 			}
@@ -206,12 +215,12 @@ public:
 	};
 
 	//Agrega imagenes al arbol binario y al iconview, debe ser llamado en un hilo diferente al gui
-	void addImages(ArrayList<String>  &images){
+	void addImages(ArrayList<String>  &images, bool save = false){
 		for (int i = 0; i < mButtons.size(); i++){
 			mButtons[i]->setEnabled(false);
 		}
 		mComboBox->setEnabled(false);
-		ImageLoader *loader = new ImageLoader(images, this);
+		ImageLoader *loader = new ImageLoader(images, this, save);
 		loader->setDeleteReference(true); //Se eliminara el objeto despues de terminar la ejecucion
 		loader->start();
 	}
@@ -227,9 +236,27 @@ public:
 			mMessage = message;
 		}
 		void run(){
-			if (mMessage == "RESTORE"){
+			printf("%s\n", mMessage.c_str());
+			if (mMessage.equals("restore")){
 				gdk_threads_enter();
 				mController->setVisible(true);
+				gdk_threads_leave();
+			}
+			else if (mMessage.substring(0, 3).equals("add")){
+				ArrayList<String> images;
+				int start = 4;
+				for (int i = 4; i < mMessage.length(); i++){
+					if (mMessage.charAt(i) == ':'){
+						images.add(mMessage.substring(start, i - start));
+						start =  i + 1;
+					}
+				}
+				if (start < mMessage.length()){
+					images.add(mMessage.substring(start));
+				}
+				gdk_threads_enter();
+				mController->addImages(images, true);
+
 				gdk_threads_leave();
 			}
 		}

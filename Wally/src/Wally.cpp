@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
 		controlador = new Controller(argc, argv);
 		if (argc > 1 && String("--hidden") == argv[1]) {
 			printf("Iniciando en modo oculto\n");
+			controlador->setVisible(false);
 		} else {
 			controlador->setVisible(true);
 		}
@@ -35,7 +36,20 @@ int main(int argc, char** argv) {
 	}
 	else{
 		int pid = instances.getPID(0);
-		instances.send(pid, "RESTORE", 7);
+
+		printf("%s\n", "Executado");
+		String command("add");
+		if (argc > 1 && command == argv[1]){
+			for (int i = 2; i < argc; i++){
+				command += String(":") + argv[i];
+			}
+			printf("%s\n", command.c_str());
+			instances.send(pid, command, command.length());
+		}
+		else{
+			printf("%s\n", "restore");
+			instances.send(pid, "restore", 7);
+		}
 	}
 	return 0;
 }

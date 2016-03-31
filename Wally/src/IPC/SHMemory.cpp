@@ -13,12 +13,7 @@
 
 SHMemory::SHMemory(int key, int preferedSize):
 mKey(key),	mMemory(0), mRemovable(true), mLocked(false), mSemaphore(0) {
-	try{
-		mSemaphore = new BinarySemaphore(key);
-	}
-	catch(const char* e){
-		throw e;
-	}
+	mSemaphore = new BinarySemaphore(key);
 	mSemaphore->wait();
 	//Tratamos de acceder a esta memoria si fue reservada previamente
 	mSegmentId = shmget(key, preferedSize, S_IRUSR | S_IWUSR);

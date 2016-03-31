@@ -8,6 +8,9 @@
 #ifndef BINARYSEMAPHORE_H_
 #define BINARYSEMAPHORE_H_
 
+
+
+
 class BinarySemaphore {
 public:
 	BinarySemaphore(int key);
